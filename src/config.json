@@ -1,0 +1,36 @@
+{
+    "themeColor": "#1a3673",
+    "title": "Chat Assistant",
+    "newChatButtonLabel": "New Chat",
+    "apiPaths": {
+        "getResponse": "http://10.126.192.122:8880/api/cortex/analyst/",
+        "feedback": "http://10.126.192.122:8100/update_feedback/",
+        "sqlUrl": "http://10.126.192.122:8880/run_sql_query/"
+    },
+    "aplctn_cd": "edagnai",
+    "user_id": "abc1234",
+    "chatInitialMessage": "Hello there, I am your Chat Assistant. How can I help you today?",
+    "suggestedPrompts": [
+        "Prompt 1",
+        "Prompt 2",
+        "Prompt 3"
+    ],
+    "images": {
+        "logo": "./images/logo.png",
+        "user": "./images/user.png",
+        "chatbot": "./images/chatbot.png"
+    },
+    "customStyles": {
+        "container": {},
+        "appBar": {},
+        "logo": {},
+        "drawer": {},
+        "newChatButton": {},
+        "main": {},
+        "chat": {
+            "inputContainer": {},
+            "input": {},
+            "chatContainer": {}
+        }
+    }
+}

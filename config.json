@@ -1,0 +1,8 @@
+{
+  "app_id":"aedl",
+  "app_id_api_key":"78a799ea-a0f6-11ef-a0ce-15a449f7a8b0",
+  "method": "cortex",
+  "model": "llama3.1-70b-elevance",
+  "sys_msg": "You are powerful AI assistant in providing accurate answers always. Be Concise in providing answers based on context.",
+  "limit_convs": 3
+}
