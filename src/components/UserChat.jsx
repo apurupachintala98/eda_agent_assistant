@@ -195,7 +195,7 @@ function UserChat(props) {
       }
       const json = await response.json();
       const data = json.modelreply;
-
+      console.log(data);
       // Check if data.response is null or undefined
       if (data.response === null || !data.response) {
         const defaultReply = 'No valid data received from the server.';
