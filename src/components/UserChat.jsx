@@ -195,7 +195,6 @@ function UserChat(props) {
       }
       const json = await response.json();
       const data = json.modelreply;
-      console.log(data);
       // Check if data.response is null or undefined
       if (data.response === null || !data.response) {
         const defaultReply = 'No valid data received from the server.';
@@ -224,8 +223,8 @@ function UserChat(props) {
         }
         return String(input);
       };
-      let modelReply = 'No valid reply found.'; // Default message
-      if (data.type === 'sql') {
+      let modelReply; // Default message
+      if (data.type == 'sql') {
         const sqlContent = data.response;
         const highlightedSql = highlightSqlKeywords(sqlContent);
         modelReply = (
@@ -238,7 +237,7 @@ function UserChat(props) {
         setShowExecuteButton(true);
         const raw = data.response;
         setRawResponse(raw);
-      } else if (data.type === 'text') {
+      } else if (data.type == 'text') {
         modelReply = data.response;
         if (typeof data.response === 'object' && !Array.isArray(data.response) && Object.keys(data.response).length > 0) {
           // Generate table from nested object data
