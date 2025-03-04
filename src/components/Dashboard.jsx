@@ -20,6 +20,7 @@ const Dashboard = ({
   sqlUrl,
   aplctn_cd,
   feedback,
+  runCortex,
   user_id,
   chatInitialMessage = "Hello there, I am your Chat Assistant. How can I help you today?",
   customStyles = {},
@@ -158,6 +159,7 @@ const Dashboard = ({
               setShowExecuteButton={setShowExecuteButton}
               showButton={showButton}
               setShowButton={setShowButton}
+              runCortex={runCortex}
             />
           </Box>
         </Box>

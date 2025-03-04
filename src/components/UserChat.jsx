@@ -28,7 +28,7 @@ function UserChat(props) {
     isLoading, setIsLoading,
     successMessage, setSuccessMessage,
     showInitialView, setShowInitialView,
-    sessionId, setRequestId, apiPath, user_id, aplctn_cd, sqlUrl, feedback, customStyles = {}, chatbotImage, userImage, handleNewChat, suggestedPrompts, showButton, setShowButton, showExecuteButton, setShowExecuteButton,
+    sessionId, setRequestId, apiPath, user_id, aplctn_cd, sqlUrl, feedback, runCortex, customStyles = {}, chatbotImage, userImage, handleNewChat, suggestedPrompts, showButton, setShowButton, showExecuteButton, setShowExecuteButton,
   } = props;
 
   const endOfMessagesRef = useRef(null);
@@ -47,7 +47,6 @@ function UserChat(props) {
   const [rawResponse, setRawResponse] = useState('');
   const [promptQuestion, setPromptQuestion] = useState('');
   const [outputExecQuery, setOutputExecQuery] = useState('');
-
 
   useLayoutEffect(() => {
     if (endOfMessagesRef.current) {
@@ -73,7 +72,6 @@ function UserChat(props) {
     if (inactivityTimeoutRef.current) {
       clearTimeout(inactivityTimeoutRef.current);
     }
-
     inactivityTimeoutRef.current = setTimeout(() => {
       handleSessionEnd(); // End session after 30 minutes of inactivity
     }, INACTIVITY_TIME);
@@ -85,17 +83,15 @@ function UserChat(props) {
   }
 
   function updateChatLogFromApiResponse(apiResponse, currentChatLog) {
-    if (apiResponse && apiResponse.response) {  // Check that the response exists
+    if (apiResponse && apiResponse.response) {  
       let content = apiResponse.response;
-      // Assume content is already properly formatted for display
       const botMessage = {
         role: 'assistant',
         content: content
       };
-      setChatLog([...currentChatLog, botMessage]); // Update the chat log
+      setChatLog([...currentChatLog, botMessage]); 
     }
   }
-
 
   const handleInputFocusOrChange = () => {
     setShowInitialView(false);
@@ -112,7 +108,6 @@ function UserChat(props) {
   function highlightSqlKeywords(sql) {
 
     const formattedSql = sqlFormatter.format(sql);
-    // Define SQL patterns that are more likely to appear in actual SQL code
     const patterns = [
       '\\bSELECT\\b[^;]*?\\bFROM\\b',  // SELECT ... FROM ...
       '\\bINSERT INTO\\b[^;]*?\\bVALUES\\b',  // INSERT INTO ... VALUES ...
@@ -123,21 +118,15 @@ function UserChat(props) {
       '\\bGROUP BY\\b',  // GROUP BY ...
       '\\bORDER BY\\b'  // ORDER BY ...
     ];
-  
-    // Combine all patterns into one regex
     const regex = new RegExp(`(${patterns.join('|')})`, 'gi');
-  
-    // Function to wrap matched keywords with styling
-    const highlight = (match) => {
+
+    const highlight = (match) => { // Function to wrap matched keywords with styling
       const keywords = ['SELECT', 'FROM', 'WHERE', 'JOIN', 'INSERT', 'UPDATE', 'DELETE', 'INTO', 'VALUES', 'SET', 'ON', 'GROUP BY', 'ORDER BY'];
       const keywordRegex = new RegExp(`\\b(${keywords.join('|')})\\b`, 'gi');
       return match.replace(keywordRegex, keywordMatch => `<span style="font-weight: bold; color: red;">${keywordMatch}</span>`);
     };
-  
-    // Replace detected SQL patterns with highlighted keywords
     return formattedSql.replace(regex, highlight);
   }
-  
 
   const handleMessageSubmit = async (messageContent, fromPrompt = false) => {
     if (!messageContent.trim()) return;
@@ -145,12 +134,10 @@ function UserChat(props) {
       setError('Please provide valid app_cd and request_id.');
       return;
     }
-
     const newMessage = {
       role: 'user',
       content: messageContent,
     };
-
     const newChatLog = [...chatLog, newMessage];
     // Preprocess newChatLog to ensure all entries are correctly formatted
     const preparedChatLog = newChatLog.map(message => {
@@ -208,6 +195,16 @@ function UserChat(props) {
       }
       const json = await response.json();
       const data = json.modelreply;
+
+      // Check if data.response is null or undefined
+      if (data.response === null || !data.response) {
+        const defaultReply = 'No valid data received from the server.';
+        const botMessage = { role: 'assistant', content: defaultReply };
+        setChatLog([...newChatLog, botMessage]);
+        setError(defaultReply);
+        setIsLoading(false);
+        return;
+      }
       setApiResponse(data);
       const newResId = data.fdbk_id; // Assuming fdbk_id is part of the response
       setResId(newResId);
@@ -243,11 +240,81 @@ function UserChat(props) {
         setRawResponse(raw);
       } else if (data.type === 'text') {
         modelReply = data.response;
+        if (typeof data.response === 'object' && !Array.isArray(data.response) && Object.keys(data.response).length > 0) {
+          // Generate table from nested object data
+          const keys = Object.keys(data.response);
+          const columns = Object.keys(data.response[keys[0]]); // assuming uniform structure
+          const rows = columns.map(column => ({
+            column,
+            values: keys.map(key => data.response[key][column])
+          }));
+
+          modelReply = (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'start' }}>
+              <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+                <thead>
+                  <tr>{columns.map(column => <th key={column} style={{ border: '1px solid black', padding: '8px', textAlign: 'left' }}>{column}</th>)}</tr>
+                </thead>
+                <tbody>
+                  {keys.map((key, rowIndex) => (
+                    <tr key={key}>
+                      {columns.map(column => (
+                        <td key={column} style={{ border: '1px solid black', padding: '8px' }}>{convertToString(data.response[key][column])}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        } else if (Array.isArray(data.response) && data.response.every(item => typeof item === 'object')) {
+          // Handling array of objects scenario
+          const columnCount = Object.keys(data.response[0]).length;
+          const rowCount = data.response.length;
+          const columns = Object.keys(data.modelreply.response[0]);
+          const rows = data.modelreply.response;
+
+          modelReply = (
+            <div style={{ display: 'flex', alignItems: 'start' }}>
+              <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+                <thead>
+                  <tr>
+                    {columns.map(column => (
+                      <th key={column} style={{ border: '1px solid black', padding: '8px', textAlign: 'left' }}>{column}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row, rowIndex) => (
+                    <tr key={rowIndex}>
+                      {columns.map(column => (
+                        <td key={`${rowIndex}-${column}`} style={{ border: '1px solid black', padding: '8px' }}>
+                          {convertToString(row[column])}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {(rowCount > 1 && columnCount > 1) && (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<BarChartIcon />}
+                  sx={{ display: 'flex', alignItems: 'center', padding: '8px 16px', marginLeft: '15px', width: '190px', fontSize: '10px', fontWeight: 'bold' }}
+                  onClick={handleGraphClick}
+                >
+                  Graph View
+                </Button>
+              )}
+            </div>
+          );
+        }
       } else {
         modelReply = convertToString(data.response);
-          const botMessage = { role: 'assistant', content: modelReply };
-          console.log(botMessage);
-          setChatLog([...newChatLog, botMessage]);
+        const botMessage = { role: 'assistant', content: modelReply };
+        console.log(botMessage);
+        setChatLog([...newChatLog, botMessage]);
       }
     } catch (err) {
       let fallbackErrorMessage = 'Error communicating with backend.';
@@ -292,11 +359,8 @@ function UserChat(props) {
           body: JSON.stringify(payload)
         }
       );
-
-      // Check if response is okay
       if (!response.ok) {
         let errorMessage = '';
-        // Handle different status codes
         if (response.status === 404) {
           errorMessage = '404 - Not Found';
         } else if (response.status === 500) {
@@ -304,8 +368,6 @@ function UserChat(props) {
         } else {
           errorMessage = `${response.status} - ${response.statusText}`;
         }
-
-        // Create an error message object
         const errorMessageContent = {
           role: 'assistant',
           content: (
@@ -341,8 +403,6 @@ function UserChat(props) {
       if (data && data.modelreply && Array.isArray(data.modelreply.response) && data.modelreply.response.length > 0) {
         const columns = Object.keys(data.modelreply.response[0]);
         const rows = data.modelreply.response;
-
-
         modelReply = (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'start' }}>
             <table style={{ borderCollapse: 'collapse', width: '100%' }}>
@@ -384,12 +444,10 @@ function UserChat(props) {
       } else {
         modelReply = convertToString(data.modelreply.response);
       }
-
       const botMessage = {
         role: 'assistant',
         content: modelReply,
       };
-
       setChatLog((prevChatLog) => [...prevChatLog, botMessage]); // Update chat log with assistant's message
       await apiCortexComplete(data, promptQuestion, setChatLog);
 
@@ -404,18 +462,16 @@ function UserChat(props) {
           </div>
         ),
       };
-
       setChatLog((prevChatLog) => [...prevChatLog, errorMessageContent]); // Update chat log with assistant's error message
       console.error('Error:', err); // Log the error for debugging
     } finally {
       setIsLoading(false);// Set loading state to false
       setShowExecuteButton(false);
-      // setShowButton(false);
     }
   }
 
   const apiCortexComplete = async (execData, promptQuestion, setChatLog) => {
-    const url = "http://10.126.192.122:8880/api/cortex/complete/";
+    const url = `${runCortex}`;
     const payload = {
       aplctn_cd: aplctn_cd,
       session_id: sessionId,

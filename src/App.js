@@ -14,6 +14,7 @@ function App() {
                 apiPath={config.apiPaths.getResponse}
                 sqlUrl={config.apiPaths.sqlUrl}
                 feedback={config.apiPaths.feedback}
+                runCortex={config.apiPaths.runCortex}
                 aplctn_cd={config.aplctn_cd}
                 user_id={config.user_id}
                 chatbotImage={require(`${config.images.chatbot}`)}
