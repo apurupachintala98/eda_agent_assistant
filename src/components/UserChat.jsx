@@ -41,7 +41,7 @@ function UserChat(props) {
   const [resId, setResId] = useState(null);
   const INACTIVITY_TIME = 10 * 60 * 1000;
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [storedResponse, setStoredResponse] = useState(''); // New state to store the response
+  // const [storedResponse, setStoredResponse] = useState(''); // New state to store the response
   const [showResponse, setShowResponse] = useState(false);
   const [data, setData] = useState('');
   const [rawResponse, setRawResponse] = useState('');
@@ -108,6 +108,36 @@ function UserChat(props) {
       if (inactivityTimeoutRef.current) clearTimeout(inactivityTimeoutRef.current);
     };
   }, []);
+
+  function highlightSqlKeywords(sql) {
+
+    const formattedSql = sqlFormatter.format(sql);
+    // Define SQL patterns that are more likely to appear in actual SQL code
+    const patterns = [
+      '\\bSELECT\\b[^;]*?\\bFROM\\b',  // SELECT ... FROM ...
+      '\\bINSERT INTO\\b[^;]*?\\bVALUES\\b',  // INSERT INTO ... VALUES ...
+      '\\bUPDATE\\b[^;]*?\\bSET\\b',  // UPDATE ... SET ...
+      '\\bDELETE FROM\\b',  // DELETE FROM ...
+      '\\bJOIN\\b[^;]*?\\bON\\b',  // JOIN ... ON ...
+      '\\bWHERE\\b',  // WHERE ...
+      '\\bGROUP BY\\b',  // GROUP BY ...
+      '\\bORDER BY\\b'  // ORDER BY ...
+    ];
+  
+    // Combine all patterns into one regex
+    const regex = new RegExp(`(${patterns.join('|')})`, 'gi');
+  
+    // Function to wrap matched keywords with styling
+    const highlight = (match) => {
+      const keywords = ['SELECT', 'FROM', 'WHERE', 'JOIN', 'INSERT', 'UPDATE', 'DELETE', 'INTO', 'VALUES', 'SET', 'ON', 'GROUP BY', 'ORDER BY'];
+      const keywordRegex = new RegExp(`\\b(${keywords.join('|')})\\b`, 'gi');
+      return match.replace(keywordRegex, keywordMatch => `<span style="font-weight: bold; color: red;">${keywordMatch}</span>`);
+    };
+  
+    // Replace detected SQL patterns with highlighted keywords
+    return formattedSql.replace(regex, highlight);
+  }
+  
 
   const handleMessageSubmit = async (messageContent, fromPrompt = false) => {
     if (!messageContent.trim()) return;
@@ -198,157 +228,26 @@ function UserChat(props) {
         return String(input);
       };
       let modelReply = 'No valid reply found.'; // Default message
-      if (!data.response) {
-        const defaultReply = json.modelreply || 'Internal server error.';
-        const botMessage = { role: 'assistant', content: defaultReply };
-        setChatLog([...newChatLog, botMessage]);
+      if (data.type === 'sql') {
+        const sqlContent = data.response;
+        const highlightedSql = highlightSqlKeywords(sqlContent);
+        modelReply = (
+          <div>
+            <pre style={{ color: 'blue' }}>
+              <code dangerouslySetInnerHTML={{ __html: highlightedSql }} />
+            </pre>
+          </div>
+        );
+        setShowExecuteButton(true);
+        const raw = data.response;
+        setRawResponse(raw);
+      } else if (data.type === 'text') {
+        modelReply = data.response;
       } else {
-        // Handling object with nested objects scenario
-        if (typeof data.response === 'object' && !Array.isArray(data.response) && Object.keys(data.response).length > 0) {
-          // Generate table from nested object data
-          const keys = Object.keys(data.response);
-          const columns = Object.keys(data.response[keys[0]]); // assuming uniform structure
-          const rows = columns.map(column => ({
-            column,
-            values: keys.map(key => data.response[key][column])
-          }));
-
-          modelReply = (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'start' }}>
-              <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-                <thead>
-                  <tr>{columns.map(column => <th key={column} style={{ border: '1px solid black', padding: '8px', textAlign: 'left' }}>{column}</th>)}</tr>
-                </thead>
-                <tbody>
-                  {keys.map((key, rowIndex) => (
-                    <tr key={key}>
-                      {columns.map(column => (
-                        <td key={column} style={{ border: '1px solid black', padding: '8px' }}>{convertToString(data.response[key][column])}</td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          );
-        } else if (Array.isArray(data.response) && data.response.every(item => typeof item === 'object')) {
-          // Handling array of objects scenario
-          const columnCount = Object.keys(data.response[0]).length;
-          const rowCount = data.response.length;
-          const columns = Object.keys(data.modelreply.response[0]);
-          const rows = data.modelreply.response;
-
-          modelReply = (
-            <div style={{ display: 'flex', alignItems: 'start' }}>
-              <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-                <thead>
-                  <tr>
-                    {columns.map(column => (
-                      <th key={column} style={{ border: '1px solid black', padding: '8px', textAlign: 'left' }}>{column}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row, rowIndex) => (
-                    <tr key={rowIndex}>
-                      {columns.map(column => (
-                        <td key={`${rowIndex}-${column}`} style={{ border: '1px solid black', padding: '8px' }}>
-                          {convertToString(row[column])}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {(rowCount > 1 && columnCount > 1) && (
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<BarChartIcon />}
-                  sx={{ display: 'flex', alignItems: 'center', padding: '8px 16px', marginLeft: '15px', width: '190px', fontSize: '10px', fontWeight: 'bold' }}
-                  onClick={handleGraphClick}
-                >
-                  Graph View
-                </Button>
-              )}
-            </div>
-          );
-        } else if (typeof data.response === 'string') {
-          const sqlRegex = /```sql([\s\S]*?)```/g; // Regex to detect SQL blocks in markdown format
-          const sqlKeywordRegex = /SELECT|FROM|WHERE|JOIN|INSERT|UPDATE|DELETE/i; // Regex to detect SQL keywords outside of blocks
-          const parts = [];
-          let lastIndex = 0;
-          let match;
-          let containsSQL = false; // Flag to track SQL content
-
-          while ((match = sqlRegex.exec(data.response)) !== null) {
-            containsSQL = true; // Set flag if SQL is detected in the block
-            if (match.index > lastIndex) {
-              parts.push(
-                <p key={`text-${lastIndex}`} style={{ margin: "8px 0" }}>
-                  {data.response.slice(lastIndex, match.index).trim()}
-                </p>
-              );
-            }
-            const sqlContent = match[1].trim();
-            try {
-              parts.push(
-                <pre key={`sql-${match.index}`} style={{ margin: '8px 0' }}>
-                  <code style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                    {sqlFormatter(sqlContent)}
-                  </code>
-                </pre>
-              );
-            
-            } catch (err) {
-              console.error("SQL Formatting Error:", err);
-              parts.push(
-                <pre key={`sql-${match.index}`} style={{ margin: '8px 0', color: 'red' }}>
-                  {sqlContent}
-                </pre>
-              );
-            }
-            lastIndex = sqlRegex.lastIndex;
-          }
-          if (lastIndex < data.response.length) {
-            const remainingContent = data.response.slice(lastIndex).trim();
-            if (sqlKeywordRegex.test(remainingContent)) {
-              containsSQL = true; // Set flag if SQL keywords are detected in remaining content
-              parts.push(
-                <pre key={`sql-remaining`} style={{ margin: '8px 0' }}>
-                  <code style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                    {sqlFormatter(remainingContent)}
-                  </code>
-                </pre>
-              );
-            } else {
-              parts.push(
-                <p key={`text-${lastIndex}`} style={{ margin: "8px 0" }}>
-                  {remainingContent}
-                </p>
-              );
-            }
-          }
-
-          modelReply = (
-            <div style={{ overflow: "auto", maxWidth: "100%", padding: "10px" }}>
-              {parts}
-            </div>
-          );
-
-          const raw = data.response;
-          setRawResponse(raw);
-          setStoredResponse(modelReply);
-
-          // Set button visibility based on the presence of SQL
-          // setShowButton(containsSQL);
-          setShowExecuteButton(containsSQL);
-        } else {
-          modelReply = convertToString(data.response);
+        modelReply = convertToString(data.response);
           const botMessage = { role: 'assistant', content: modelReply };
           console.log(botMessage);
           setChatLog([...newChatLog, botMessage]);
-        }
       }
     } catch (err) {
       let fallbackErrorMessage = 'Error communicating with backend.';
@@ -608,7 +507,7 @@ function UserChat(props) {
         maxHeight: '73vh',
         padding: '10px', ...customStyles.chatContainer
       }}>
-        <ChatMessage chatLog={chatLog} chatbotImage={chatbotImage} userImage={userImage} storedResponse={storedResponse} />
+        <ChatMessage chatLog={chatLog} chatbotImage={chatbotImage} userImage={userImage} />
         <div ref={endOfMessagesRef} />
         {showExecuteButton && (
           <Button variant="contained" color="primary" onClick={handleButtonClick}>

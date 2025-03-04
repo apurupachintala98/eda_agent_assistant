@@ -9,17 +9,17 @@ import 'highlight.js/styles/github.css';
 hljs.registerLanguage('sql', sql);
 
 
-const ChatMessage = ({ chatLog, chatbotImage, userImage, storedResponse }) => {
-  useEffect(() => {
-    document.querySelectorAll('pre code').forEach((block) => {
-      hljs.highlightElement(block);
-    });
-  }, [chatLog]);
+const ChatMessage = ({ chatLog, chatbotImage, userImage }) => {
+  // useEffect(() => {
+  //   document.querySelectorAll('pre code').forEach((block) => {
+  //     hljs.highlightElement(block);
+  //   });
+  // }, [chatLog]);
 
-  const isSQL = (content) => {
-    //  check if content contains typical SQL keywords
-    return /SELECT|FROM|WHERE|JOIN|INSERT|UPDATE|DELETE/i.test(content);
-  };
+  // const isSQL = (content) => {
+  //   //  check if content contains typical SQL keywords
+  //   return /SELECT|FROM|WHERE|JOIN|INSERT|UPDATE|DELETE/i.test(content);
+  // };
 
   return (
     <Box sx={{ width: '100%', padding: '10px 0' }}>
@@ -44,7 +44,7 @@ const ChatMessage = ({ chatLog, chatbotImage, userImage, storedResponse }) => {
               color: '#1a3673',
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            {/* <Box sx={{ display: 'flex', alignItems: 'center' }}>
               {chat.role === 'assistant' ? (
                 <img
                   src={chatbotImage}
@@ -69,7 +69,39 @@ const ChatMessage = ({ chatLog, chatbotImage, userImage, storedResponse }) => {
                   style={{ width: 32, height: 32, borderRadius: '50%', marginLeft: '8px' }}
                 />
               ) : null}
+            </Box> */}
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              {chat.role === 'assistant' ? (
+                <>
+                  <img
+                    src={chatbotImage}
+                    alt="Chatbot"
+                    style={{ width: 32, height: 32, borderRadius: '50%', marginRight: '8px' }}
+                  />
+                  <Typography
+                    variant="body2"
+                    sx={{ fontSize: 14, fontWeight: 'bold', whiteSpace: 'pre-line' }}
+                  >
+                    {/* {isSQL(chat.content) ? (
+                      <pre><code className="sql">{chat.content}</code></pre>
+                    ) : (
+                      chat.content
+                    )} */}
+                     {chat.content}
+                  </Typography>
+                </>
+              ) : (
+                <>
+                  {chat.content}
+                  <img
+                    src={userImage}
+                    alt="User"
+                    style={{ width: 32, height: 32, borderRadius: '50%', marginLeft: '8px' }}
+                  />
+                </>
+              )}
             </Box>
+
           </Paper>
         </Box>
       ))}
