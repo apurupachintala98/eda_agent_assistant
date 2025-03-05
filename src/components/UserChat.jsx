@@ -105,29 +105,7 @@ function UserChat(props) {
     };
   }, []);
 
-  function highlightSqlKeywords(sql) {
-
-    const formattedSql = sqlFormatter.format(sql);
-    const patterns = [
-      '\\bSELECT\\b[^;]*?\\bFROM\\b',  // SELECT ... FROM ...
-      '\\bINSERT INTO\\b[^;]*?\\bVALUES\\b',  // INSERT INTO ... VALUES ...
-      '\\bUPDATE\\b[^;]*?\\bSET\\b',  // UPDATE ... SET ...
-      '\\bDELETE FROM\\b',  // DELETE FROM ...
-      '\\bJOIN\\b[^;]*?\\bON\\b',  // JOIN ... ON ...
-      '\\bWHERE\\b',  // WHERE ...
-      '\\bGROUP BY\\b',  // GROUP BY ...
-      '\\bORDER BY\\b'  // ORDER BY ...
-    ];
-    const regex = new RegExp(`(${patterns.join('|')})`, 'gi');
-
-    const highlight = (match) => { // Function to wrap matched keywords with styling
-      const keywords = ['SELECT', 'FROM', 'WHERE', 'JOIN', 'INSERT', 'UPDATE', 'DELETE', 'INTO', 'VALUES', 'SET', 'ON', 'GROUP BY', 'ORDER BY'];
-      const keywordRegex = new RegExp(`\\b(${keywords.join('|')})\\b`, 'gi');
-      return match.replace(keywordRegex, keywordMatch => `<span style="font-weight: bold; color: red;">${keywordMatch}</span>`);
-    };
-    return formattedSql.replace(regex, highlight);
-  }
-
+  
   const handleMessageSubmit = async (messageContent, fromPrompt = false) => {
     if (!messageContent.trim()) return;
     if (!aplctn_cd.trim() || !sessionId.trim()) {
@@ -220,7 +198,7 @@ function UserChat(props) {
       console.log(data.type);
 
       if (data) {
-        if (data.type == 'sql') {
+        if (data.type === 'sql') {
           const sqlContent = data.response;
           const highlightedSql = highlightSqlKeywords(sqlContent);
           modelReply = (
@@ -330,6 +308,39 @@ function UserChat(props) {
       setResponseReceived(true);// Set loading state to false
     }
   };
+
+  function highlightSqlKeywords(sql) {
+    console.log("Original SQL:", sql);  // Debug: log the original SQL
+  
+    // Ensure the SQL is properly formatted before highlighting
+    const formattedSql = sqlFormatter.format(sql);
+    console.log("Formatted SQL:", formattedSql);  // Debug: log the formatted SQL
+  
+    // Regular expression to match major SQL keywords and clauses
+    const patterns = [
+      '\\bSELECT\\b[^;]*?\\bFROM\\b',
+      '\\bINSERT INTO\\b[^;]*?\\bVALUES\\b',
+      '\\bUPDATE\\b[^;]*?\\bSET\\b',
+      '\\bDELETE FROM\\b',
+      '\\bJOIN\\b[^;]*?\\bON\\b',
+      '\\bWHERE\\b',
+      '\\bGROUP BY\\b',
+      '\\bORDER BY\\b'
+    ];
+    const regex = new RegExp(`(${patterns.join('|')})`, 'gi');
+  
+    // Function to apply HTML styling to keywords
+    const highlight = (match) => {
+      const keywords = ['SELECT', 'FROM', 'WHERE', 'JOIN', 'INSERT', 'UPDATE', 'DELETE', 'INTO', 'VALUES', 'SET', 'ON', 'GROUP BY', 'ORDER BY'];
+      const keywordRegex = new RegExp(`\\b(${keywords.join('|')})\\b`, 'gi');
+      return match.replace(keywordRegex, keywordMatch => `<span style="font-weight: bold; color: red;">${keywordMatch}</span>`);
+    };
+  
+    // Replace keywords in formatted SQL with styled versions
+    const highlightedSql = formattedSql.replace(regex, highlight);
+    console.log("Highlighted SQL:", highlightedSql);  // Debug: log the highlighted SQL
+    return highlightedSql;
+  }
 
   const handlePromptClick = async (prompt) => {
     handleMessageSubmit(prompt, true);
