@@ -85,6 +85,7 @@ function UserChat(props) {
   function updateChatLogFromApiResponse(apiResponse, currentChatLog) {
     if (apiResponse && apiResponse.response) {
       let content = apiResponse.response;
+      let type = apiResponse.type;
       const botMessage = {
         role: 'assistant',
         content: content,
