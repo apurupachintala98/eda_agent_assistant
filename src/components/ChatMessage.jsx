@@ -10,16 +10,16 @@ hljs.registerLanguage('sql', sql);
 
 
 const ChatMessage = ({ chatLog, chatbotImage, userImage }) => {
-  // useEffect(() => {
-  //   document.querySelectorAll('pre code').forEach((block) => {
-  //     hljs.highlightElement(block);
-  //   });
-  // }, [chatLog]);
+  useEffect(() => {
+    document.querySelectorAll('pre code').forEach((block) => {
+      hljs.highlightElement(block);
+    });
+  }, [chatLog]);
 
-  // const isSQL = (content) => {
-  //   //  check if content contains typical SQL keywords
-  //   return /SELECT|FROM|WHERE|JOIN|INSERT|UPDATE|DELETE/i.test(content);
-  // };
+  const isSQL = (content) => {
+    //  check if content contains typical SQL keywords
+    return /SELECT|FROM|WHERE|JOIN|INSERT|UPDATE|DELETE/i.test(content);
+  };
 
   return (
     <Box sx={{ width: '100%', padding: '10px 0' }}>
@@ -82,12 +82,11 @@ const ChatMessage = ({ chatLog, chatbotImage, userImage }) => {
                     variant="body2"
                     sx={{ fontSize: 14, fontWeight: 'bold', whiteSpace: 'pre-line' }}
                   >
-                    {/* {isSQL(chat.content) ? (
+                    {chat.type === "sql" ? (
                       <pre><code className="sql">{chat.content}</code></pre>
                     ) : (
                       chat.content
-                    )} */}
-                     {chat.content}
+                    )}
                   </Typography>
                 </>
               ) : (

@@ -87,7 +87,8 @@ function UserChat(props) {
       let content = apiResponse.response;
       const botMessage = {
         role: 'assistant',
-        content: content
+        content: content,
+        type: type
       };
       setChatLog([...currentChatLog, botMessage]);
     }
@@ -105,7 +106,7 @@ function UserChat(props) {
     };
   }, []);
 
-  
+
   const handleMessageSubmit = async (messageContent, fromPrompt = false) => {
     if (!messageContent.trim()) return;
     if (!aplctn_cd.trim() || !sessionId.trim()) {
@@ -195,99 +196,96 @@ function UserChat(props) {
         return String(input);
       };
       let modelReply; // Default message
-      console.log(data.type);
+      if (data.type === 'sql') {
+        const sqlContent = data.response;
+        const highlightedSql = highlightSqlKeywords(sqlContent);
+        modelReply = (
+          <div>
+            <pre style={{ color: 'blue' }}>
+              <code dangerouslySetInnerHTML={{ __html: highlightedSql }} />
+            </pre>
+          </div>
+        );
+        setShowExecuteButton(true);
+        const raw = data.response;
+        setRawResponse(raw);
+      } else if (data.type == 'text') {
+        modelReply = data.response;
+        if (typeof data.response === 'object' && !Array.isArray(data.response) && Object.keys(data.response).length > 0) {
+          // Generate table from nested object data
+          const keys = Object.keys(data.response);
+          const columns = Object.keys(data.response[keys[0]]); // assuming uniform structure
+          const rows = columns.map(column => ({
+            column,
+            values: keys.map(key => data.response[key][column])
+          }));
 
-        if (data.type === 'sql') {
-          const sqlContent = data.response;
-          const highlightedSql = highlightSqlKeywords(sqlContent);
           modelReply = (
-            <div>
-              <pre style={{ color: 'blue' }}>
-                <code dangerouslySetInnerHTML={{ __html: highlightedSql }} />
-              </pre>
-            </div>
-          );
-          setShowExecuteButton(true);
-          const raw = data.response;
-          setRawResponse(raw);
-        } else if (data.type == 'text') {
-          modelReply = data.response;
-          if (typeof data.response === 'object' && !Array.isArray(data.response) && Object.keys(data.response).length > 0) {
-            // Generate table from nested object data
-            const keys = Object.keys(data.response);
-            const columns = Object.keys(data.response[keys[0]]); // assuming uniform structure
-            const rows = columns.map(column => ({
-              column,
-              values: keys.map(key => data.response[key][column])
-            }));
-
-            modelReply = (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'start' }}>
-                <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-                  <thead>
-                    <tr>{columns.map(column => <th key={column} style={{ border: '1px solid black', padding: '8px', textAlign: 'left' }}>{column}</th>)}</tr>
-                  </thead>
-                  <tbody>
-                    {keys.map((key, rowIndex) => (
-                      <tr key={key}>
-                        {columns.map(column => (
-                          <td key={column} style={{ border: '1px solid black', padding: '8px' }}>{convertToString(data.response[key][column])}</td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            );
-          } else if (Array.isArray(data.response) && data.response.every(item => typeof item === 'object')) {
-            // Handling array of objects scenario
-            const columnCount = Object.keys(data.response[0]).length;
-            const rowCount = data.response.length;
-            const columns = Object.keys(data.modelreply.response[0]);
-            const rows = data.modelreply.response;
-
-            modelReply = (
-              <div style={{ display: 'flex', alignItems: 'start' }}>
-                <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-                  <thead>
-                    <tr>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'start' }}>
+              <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+                <thead>
+                  <tr>{columns.map(column => <th key={column} style={{ border: '1px solid black', padding: '8px', textAlign: 'left' }}>{column}</th>)}</tr>
+                </thead>
+                <tbody>
+                  {keys.map((key, rowIndex) => (
+                    <tr key={key}>
                       {columns.map(column => (
-                        <th key={column} style={{ border: '1px solid black', padding: '8px', textAlign: 'left' }}>{column}</th>
+                        <td key={column} style={{ border: '1px solid black', padding: '8px' }}>{convertToString(data.response[key][column])}</td>
                       ))}
                     </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((row, rowIndex) => (
-                      <tr key={rowIndex}>
-                        {columns.map(column => (
-                          <td key={`${rowIndex}-${column}`} style={{ border: '1px solid black', padding: '8px' }}>
-                            {convertToString(row[column])}
-                          </td>
-                        ))}
-                      </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        } else if (Array.isArray(data.response) && data.response.every(item => typeof item === 'object')) {
+          // Handling array of objects scenario
+          const columnCount = Object.keys(data.response[0]).length;
+          const rowCount = data.response.length;
+          const columns = Object.keys(data.modelreply.response[0]);
+          const rows = data.modelreply.response;
+
+          modelReply = (
+            <div style={{ display: 'flex', alignItems: 'start' }}>
+              <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+                <thead>
+                  <tr>
+                    {columns.map(column => (
+                      <th key={column} style={{ border: '1px solid black', padding: '8px', textAlign: 'left' }}>{column}</th>
                     ))}
-                  </tbody>
-                </table>
-                {(rowCount > 1 && columnCount > 1) && (
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    startIcon={<BarChartIcon />}
-                    sx={{ display: 'flex', alignItems: 'center', padding: '8px 16px', marginLeft: '15px', width: '190px', fontSize: '10px', fontWeight: 'bold' }}
-                    onClick={handleGraphClick}
-                  >
-                    Graph View
-                  </Button>
-                )}
-              </div>
-            );
-          }
-        } else {
-          modelReply = convertToString(data.response);
-          const botMessage = { role: 'assistant', content: modelReply };
-          console.log(botMessage);
-          setChatLog([...newChatLog, botMessage]);
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row, rowIndex) => (
+                    <tr key={rowIndex}>
+                      {columns.map(column => (
+                        <td key={`${rowIndex}-${column}`} style={{ border: '1px solid black', padding: '8px' }}>
+                          {convertToString(row[column])}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {(rowCount > 1 && columnCount > 1) && (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<BarChartIcon />}
+                  sx={{ display: 'flex', alignItems: 'center', padding: '8px 16px', marginLeft: '15px', width: '190px', fontSize: '10px', fontWeight: 'bold' }}
+                  onClick={handleGraphClick}
+                >
+                  Graph View
+                </Button>
+              )}
+            </div>
+          );
         }
+      } else {
+        modelReply = convertToString(data.response);
+        const botMessage = { role: 'assistant', content: modelReply };
+        setChatLog([...newChatLog, botMessage]);
+      }
     } catch (err) {
       let fallbackErrorMessage = 'Error communicating with backend.';
       const errorMessage = {
@@ -308,13 +306,7 @@ function UserChat(props) {
   };
 
   function highlightSqlKeywords(sql) {
-    console.log("Original SQL:", sql);  // Debug: log the original SQL
-  
-    // Formatting the SQL using the 'format' function from 'sql-formatter'
     const formattedSql = format(sql);
-    console.log("Formatted SQL:", formattedSql);  // Debug: log the formatted SQL
-  
-    // Regular expression to match major SQL keywords and clauses
     const patterns = [
       '\\bSELECT\\b[^;]*?\\bFROM\\b',
       '\\bINSERT INTO\\b[^;]*?\\bVALUES\\b',
@@ -326,20 +318,15 @@ function UserChat(props) {
       '\\bORDER BY\\b'
     ];
     const regex = new RegExp(`(${patterns.join('|')})`, 'gi');
-  
-    // Function to apply HTML styling to keywords
     const highlight = (match) => {
       const keywords = ['SELECT', 'FROM', 'WHERE', 'JOIN', 'INSERT', 'UPDATE', 'DELETE', 'INTO', 'VALUES', 'SET', 'ON', 'GROUP BY', 'ORDER BY'];
       const keywordRegex = new RegExp(`\\b(${keywords.join('|')})\\b`, 'gi');
       return match.replace(keywordRegex, keywordMatch => `<span style="font-weight: bold; color: red;">${keywordMatch}</span>`);
     };
-  
-    // Replace keywords in formatted SQL with styled versions
     const highlightedSql = formattedSql.replace(regex, highlight);
-    console.log("Highlighted SQL:", highlightedSql);  // Debug: log the highlighted SQL
     return highlightedSql;
   }
-  
+
 
   const handlePromptClick = async (prompt) => {
     handleMessageSubmit(prompt, true);
