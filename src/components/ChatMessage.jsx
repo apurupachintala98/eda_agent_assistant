@@ -8,7 +8,6 @@ import 'highlight.js/styles/github.css';
 
 hljs.registerLanguage('sql', sql);
 
-
 const ChatMessage = ({ chatLog, chatbotImage, userImage }) => {
   useEffect(() => {
     document.querySelectorAll('pre code').forEach((block) => {
@@ -16,10 +15,25 @@ const ChatMessage = ({ chatLog, chatbotImage, userImage }) => {
     });
   }, [chatLog]);
 
-  const isSQL = (content) => {
-    //  check if content contains typical SQL keywords
-    return /SELECT|FROM|WHERE|JOIN|INSERT|UPDATE|DELETE/i.test(content);
+  const parseText = (text) => {
+    const urlRegex = /(\bhttps?:\/\/\S+\b)/g; // Regex to detect URLs
+    return text.split(/(\*\*.*?\*\*)/g).flatMap((part, index) => {
+      if (part.match(/^\*\*.*\*\*$/)) {
+        // Bold text marked by double asterisks
+        return [<b key={index}>{part.replace(/\*\*/g, '')}</b>];
+      }
+      if (urlRegex.test(part)) {
+        // Splitting and linking URLs
+        return part.split(urlRegex).map((subpart, subIndex) => (
+          urlRegex.test(subpart) ? 
+          <a key={`${index}-${subIndex}`} href={subpart} target="_blank" rel="noopener noreferrer">{subpart}</a> : 
+          subpart
+        ));
+      }
+      return part;
+    });
   };
+  
 
   return (
     <Box sx={{ width: '100%', padding: '10px 0' }}>
@@ -44,32 +58,6 @@ const ChatMessage = ({ chatLog, chatbotImage, userImage }) => {
               color: '#1a3673',
             }}
           >
-            {/* <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              {chat.role === 'assistant' ? (
-                <img
-                  src={chatbotImage}
-                  alt="Chatbot"
-                  style={{ width: 32, height: 32, borderRadius: '50%', marginRight: '8px' }}
-                />
-              ) : null}
-              <Typography
-                variant="body2"
-                sx={{ fontSize: 14, fontWeight: 'bold', whiteSpace: 'pre-line' }}
-              >
-                {isSQL(chat.content) ? (
-                  <pre><code className="sql">{chat.content}</code></pre>
-                ) : (
-                  chat.content
-                )}
-              </Typography>
-              {chat.role === 'user' ? (
-                <img
-                  src={userImage}
-                  alt="User"
-                  style={{ width: 32, height: 32, borderRadius: '50%', marginLeft: '8px' }}
-                />
-              ) : null}
-            </Box> */}
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               {chat.role === 'assistant' ? (
                 <>
@@ -84,9 +72,7 @@ const ChatMessage = ({ chatLog, chatbotImage, userImage }) => {
                   >
                     {chat.type === "sql" ? (
                       <pre><code className="sql">{chat.content}</code></pre>
-                    ) : (
-                      chat.content
-                    )}
+                    ) : parseText(chat.content)}
                   </Typography>
                 </>
               ) : (
