@@ -83,13 +83,13 @@ function UserChat(props) {
   }
 
   function updateChatLogFromApiResponse(apiResponse, currentChatLog) {
-    if (apiResponse && apiResponse.response) {  
+    if (apiResponse && apiResponse.response) {
       let content = apiResponse.response;
       const botMessage = {
         role: 'assistant',
         content: content
       };
-      setChatLog([...currentChatLog, botMessage]); 
+      setChatLog([...currentChatLog, botMessage]);
     }
   }
 
@@ -174,14 +174,7 @@ function UserChat(props) {
         }
       );
       if (!response.ok) {
-        let errorMessage = '';
-        if (response.status === 404) {
-          errorMessage = '404 - Not Found';
-        } else if (response.status === 500) {
-          errorMessage = '500 - Internal Server Error';
-        } else {
-          errorMessage = `${response.status} - ${response.statusText}`;
-        }
+        const errorMessage = `${response.status} - ${response.statusText}`;
         const botMessage = {
           role: 'assistant',
           content: (
@@ -196,7 +189,7 @@ function UserChat(props) {
       const json = await response.json();
       const data = json.modelreply;
       // Check if data.response is null or undefined
-      if (data.response === null || !data.response) {
+      if (!data || data.response === null || !data.response) {
         const defaultReply = 'No valid data received from the server.';
         const botMessage = { role: 'assistant', content: defaultReply };
         setChatLog([...newChatLog, botMessage]);
@@ -224,96 +217,98 @@ function UserChat(props) {
         return String(input);
       };
       let modelReply; // Default message
-      if (data.type == 'sql') {
-        const sqlContent = data.response;
-        const highlightedSql = highlightSqlKeywords(sqlContent);
-        modelReply = (
-          <div>
-            <pre style={{ color: 'blue' }}>
-              <code dangerouslySetInnerHTML={{ __html: highlightedSql }} />
-            </pre>
-          </div>
-        );
-        setShowExecuteButton(true);
-        const raw = data.response;
-        setRawResponse(raw);
-      } else if (data.type == 'text') {
-        modelReply = data.response;
-        if (typeof data.response === 'object' && !Array.isArray(data.response) && Object.keys(data.response).length > 0) {
-          // Generate table from nested object data
-          const keys = Object.keys(data.response);
-          const columns = Object.keys(data.response[keys[0]]); // assuming uniform structure
-          const rows = columns.map(column => ({
-            column,
-            values: keys.map(key => data.response[key][column])
-          }));
-
+      if (data) {
+        if (data.type == 'sql') {
+          const sqlContent = data.response;
+          const highlightedSql = highlightSqlKeywords(sqlContent);
           modelReply = (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'start' }}>
-              <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-                <thead>
-                  <tr>{columns.map(column => <th key={column} style={{ border: '1px solid black', padding: '8px', textAlign: 'left' }}>{column}</th>)}</tr>
-                </thead>
-                <tbody>
-                  {keys.map((key, rowIndex) => (
-                    <tr key={key}>
-                      {columns.map(column => (
-                        <td key={column} style={{ border: '1px solid black', padding: '8px' }}>{convertToString(data.response[key][column])}</td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div>
+              <pre style={{ color: 'blue' }}>
+                <code dangerouslySetInnerHTML={{ __html: highlightedSql }} />
+              </pre>
             </div>
           );
-        } else if (Array.isArray(data.response) && data.response.every(item => typeof item === 'object')) {
-          // Handling array of objects scenario
-          const columnCount = Object.keys(data.response[0]).length;
-          const rowCount = data.response.length;
-          const columns = Object.keys(data.modelreply.response[0]);
-          const rows = data.modelreply.response;
+          setShowExecuteButton(true);
+          const raw = data.response;
+          setRawResponse(raw);
+        } else if (data.type == 'text') {
+          modelReply = data.response;
+          if (typeof data.response === 'object' && !Array.isArray(data.response) && Object.keys(data.response).length > 0) {
+            // Generate table from nested object data
+            const keys = Object.keys(data.response);
+            const columns = Object.keys(data.response[keys[0]]); // assuming uniform structure
+            const rows = columns.map(column => ({
+              column,
+              values: keys.map(key => data.response[key][column])
+            }));
 
-          modelReply = (
-            <div style={{ display: 'flex', alignItems: 'start' }}>
-              <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-                <thead>
-                  <tr>
-                    {columns.map(column => (
-                      <th key={column} style={{ border: '1px solid black', padding: '8px', textAlign: 'left' }}>{column}</th>
+            modelReply = (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'start' }}>
+                <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+                  <thead>
+                    <tr>{columns.map(column => <th key={column} style={{ border: '1px solid black', padding: '8px', textAlign: 'left' }}>{column}</th>)}</tr>
+                  </thead>
+                  <tbody>
+                    {keys.map((key, rowIndex) => (
+                      <tr key={key}>
+                        {columns.map(column => (
+                          <td key={column} style={{ border: '1px solid black', padding: '8px' }}>{convertToString(data.response[key][column])}</td>
+                        ))}
+                      </tr>
                     ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row, rowIndex) => (
-                    <tr key={rowIndex}>
+                  </tbody>
+                </table>
+              </div>
+            );
+          } else if (Array.isArray(data.response) && data.response.every(item => typeof item === 'object')) {
+            // Handling array of objects scenario
+            const columnCount = Object.keys(data.response[0]).length;
+            const rowCount = data.response.length;
+            const columns = Object.keys(data.modelreply.response[0]);
+            const rows = data.modelreply.response;
+
+            modelReply = (
+              <div style={{ display: 'flex', alignItems: 'start' }}>
+                <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+                  <thead>
+                    <tr>
                       {columns.map(column => (
-                        <td key={`${rowIndex}-${column}`} style={{ border: '1px solid black', padding: '8px' }}>
-                          {convertToString(row[column])}
-                        </td>
+                        <th key={column} style={{ border: '1px solid black', padding: '8px', textAlign: 'left' }}>{column}</th>
                       ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-              {(rowCount > 1 && columnCount > 1) && (
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<BarChartIcon />}
-                  sx={{ display: 'flex', alignItems: 'center', padding: '8px 16px', marginLeft: '15px', width: '190px', fontSize: '10px', fontWeight: 'bold' }}
-                  onClick={handleGraphClick}
-                >
-                  Graph View
-                </Button>
-              )}
-            </div>
-          );
+                  </thead>
+                  <tbody>
+                    {rows.map((row, rowIndex) => (
+                      <tr key={rowIndex}>
+                        {columns.map(column => (
+                          <td key={`${rowIndex}-${column}`} style={{ border: '1px solid black', padding: '8px' }}>
+                            {convertToString(row[column])}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {(rowCount > 1 && columnCount > 1) && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={<BarChartIcon />}
+                    sx={{ display: 'flex', alignItems: 'center', padding: '8px 16px', marginLeft: '15px', width: '190px', fontSize: '10px', fontWeight: 'bold' }}
+                    onClick={handleGraphClick}
+                  >
+                    Graph View
+                  </Button>
+                )}
+              </div>
+            );
+          }
+        } else {
+          modelReply = convertToString(data.response);
+          const botMessage = { role: 'assistant', content: modelReply };
+          console.log(botMessage);
+          setChatLog([...newChatLog, botMessage]);
         }
-      } else {
-        modelReply = convertToString(data.response);
-        const botMessage = { role: 'assistant', content: modelReply };
-        console.log(botMessage);
-        setChatLog([...newChatLog, botMessage]);
       }
     } catch (err) {
       let fallbackErrorMessage = 'Error communicating with backend.';
