@@ -6,7 +6,7 @@ import ChatMessage from './ChatMessage';
 import { Box, Grid, TextField, Button, IconButton, Typography, InputAdornment, Toolbar, useTheme, useMediaQuery, Modal, Backdrop, Fade } from '@mui/material';
 import ChartModal from './ChartModal';
 import BarChartIcon from '@mui/icons-material/BarChart';
-import sqlFormatter from 'sql-formatter';
+import { format } from 'sql-formatter';
 import hljs from 'highlight.js/lib/core';
 import sql from 'highlight.js/lib/languages/sql';
 import SuggestedPrompts from '../components/SuggestedPrompts';
@@ -197,7 +197,6 @@ function UserChat(props) {
       let modelReply; // Default message
       console.log(data.type);
 
-      if (data) {
         if (data.type === 'sql') {
           const sqlContent = data.response;
           const highlightedSql = highlightSqlKeywords(sqlContent);
@@ -213,83 +212,82 @@ function UserChat(props) {
           setRawResponse(raw);
         } else if (data.type == 'text') {
           modelReply = data.response;
-          // if (typeof data.response === 'object' && !Array.isArray(data.response) && Object.keys(data.response).length > 0) {
-          //   // Generate table from nested object data
-          //   const keys = Object.keys(data.response);
-          //   const columns = Object.keys(data.response[keys[0]]); // assuming uniform structure
-          //   const rows = columns.map(column => ({
-          //     column,
-          //     values: keys.map(key => data.response[key][column])
-          //   }));
+          if (typeof data.response === 'object' && !Array.isArray(data.response) && Object.keys(data.response).length > 0) {
+            // Generate table from nested object data
+            const keys = Object.keys(data.response);
+            const columns = Object.keys(data.response[keys[0]]); // assuming uniform structure
+            const rows = columns.map(column => ({
+              column,
+              values: keys.map(key => data.response[key][column])
+            }));
 
-          //   modelReply = (
-          //     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'start' }}>
-          //       <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-          //         <thead>
-          //           <tr>{columns.map(column => <th key={column} style={{ border: '1px solid black', padding: '8px', textAlign: 'left' }}>{column}</th>)}</tr>
-          //         </thead>
-          //         <tbody>
-          //           {keys.map((key, rowIndex) => (
-          //             <tr key={key}>
-          //               {columns.map(column => (
-          //                 <td key={column} style={{ border: '1px solid black', padding: '8px' }}>{convertToString(data.response[key][column])}</td>
-          //               ))}
-          //             </tr>
-          //           ))}
-          //         </tbody>
-          //       </table>
-          //     </div>
-          //   );
-          // } else if (Array.isArray(data.response) && data.response.every(item => typeof item === 'object')) {
-          //   // Handling array of objects scenario
-          //   const columnCount = Object.keys(data.response[0]).length;
-          //   const rowCount = data.response.length;
-          //   const columns = Object.keys(data.modelreply.response[0]);
-          //   const rows = data.modelreply.response;
+            modelReply = (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'start' }}>
+                <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+                  <thead>
+                    <tr>{columns.map(column => <th key={column} style={{ border: '1px solid black', padding: '8px', textAlign: 'left' }}>{column}</th>)}</tr>
+                  </thead>
+                  <tbody>
+                    {keys.map((key, rowIndex) => (
+                      <tr key={key}>
+                        {columns.map(column => (
+                          <td key={column} style={{ border: '1px solid black', padding: '8px' }}>{convertToString(data.response[key][column])}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
+          } else if (Array.isArray(data.response) && data.response.every(item => typeof item === 'object')) {
+            // Handling array of objects scenario
+            const columnCount = Object.keys(data.response[0]).length;
+            const rowCount = data.response.length;
+            const columns = Object.keys(data.modelreply.response[0]);
+            const rows = data.modelreply.response;
 
-          //   modelReply = (
-          //     <div style={{ display: 'flex', alignItems: 'start' }}>
-          //       <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-          //         <thead>
-          //           <tr>
-          //             {columns.map(column => (
-          //               <th key={column} style={{ border: '1px solid black', padding: '8px', textAlign: 'left' }}>{column}</th>
-          //             ))}
-          //           </tr>
-          //         </thead>
-          //         <tbody>
-          //           {rows.map((row, rowIndex) => (
-          //             <tr key={rowIndex}>
-          //               {columns.map(column => (
-          //                 <td key={`${rowIndex}-${column}`} style={{ border: '1px solid black', padding: '8px' }}>
-          //                   {convertToString(row[column])}
-          //                 </td>
-          //               ))}
-          //             </tr>
-          //           ))}
-          //         </tbody>
-          //       </table>
-          //       {(rowCount > 1 && columnCount > 1) && (
-          //         <Button
-          //           variant="contained"
-          //           color="primary"
-          //           startIcon={<BarChartIcon />}
-          //           sx={{ display: 'flex', alignItems: 'center', padding: '8px 16px', marginLeft: '15px', width: '190px', fontSize: '10px', fontWeight: 'bold' }}
-          //           onClick={handleGraphClick}
-          //         >
-          //           Graph View
-          //         </Button>
-          //       )}
-          //     </div>
-          //   );
-          // }
+            modelReply = (
+              <div style={{ display: 'flex', alignItems: 'start' }}>
+                <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+                  <thead>
+                    <tr>
+                      {columns.map(column => (
+                        <th key={column} style={{ border: '1px solid black', padding: '8px', textAlign: 'left' }}>{column}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((row, rowIndex) => (
+                      <tr key={rowIndex}>
+                        {columns.map(column => (
+                          <td key={`${rowIndex}-${column}`} style={{ border: '1px solid black', padding: '8px' }}>
+                            {convertToString(row[column])}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {(rowCount > 1 && columnCount > 1) && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={<BarChartIcon />}
+                    sx={{ display: 'flex', alignItems: 'center', padding: '8px 16px', marginLeft: '15px', width: '190px', fontSize: '10px', fontWeight: 'bold' }}
+                    onClick={handleGraphClick}
+                  >
+                    Graph View
+                  </Button>
+                )}
+              </div>
+            );
+          }
         } else {
           modelReply = convertToString(data.response);
           const botMessage = { role: 'assistant', content: modelReply };
           console.log(botMessage);
           setChatLog([...newChatLog, botMessage]);
         }
-      }
     } catch (err) {
       let fallbackErrorMessage = 'Error communicating with backend.';
       const errorMessage = {
@@ -312,8 +310,8 @@ function UserChat(props) {
   function highlightSqlKeywords(sql) {
     console.log("Original SQL:", sql);  // Debug: log the original SQL
   
-    // Ensure the SQL is properly formatted before highlighting
-    const formattedSql = sqlFormatter.format(sql);
+    // Formatting the SQL using the 'format' function from 'sql-formatter'
+    const formattedSql = format(sql);
     console.log("Formatted SQL:", formattedSql);  // Debug: log the formatted SQL
   
     // Regular expression to match major SQL keywords and clauses
@@ -341,6 +339,7 @@ function UserChat(props) {
     console.log("Highlighted SQL:", highlightedSql);  // Debug: log the highlighted SQL
     return highlightedSql;
   }
+  
 
   const handlePromptClick = async (prompt) => {
     handleMessageSubmit(prompt, true);
