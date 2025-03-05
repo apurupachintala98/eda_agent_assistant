@@ -6,7 +6,7 @@ import ChatMessage from './ChatMessage';
 import { Box, Grid, TextField, Button, IconButton, Typography, InputAdornment, Toolbar, useTheme, useMediaQuery, Modal, Backdrop, Fade } from '@mui/material';
 import ChartModal from './ChartModal';
 import BarChartIcon from '@mui/icons-material/BarChart';
-import { format as sqlFormatter } from 'sql-formatter';
+import sqlFormatter from 'sql-formatter';
 import hljs from 'highlight.js/lib/core';
 import sql from 'highlight.js/lib/languages/sql';
 import SuggestedPrompts from '../components/SuggestedPrompts';
