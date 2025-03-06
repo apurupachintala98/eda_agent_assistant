@@ -25,15 +25,15 @@ const ChatMessage = ({ chatLog, chatbotImage, userImage }) => {
       if (urlRegex.test(part)) {
         // Splitting and linking URLs
         return part.split(urlRegex).map((subpart, subIndex) => (
-          urlRegex.test(subpart) ? 
-          <a key={`${index}-${subIndex}`} href={subpart} target="_blank" rel="noopener noreferrer">{subpart}</a> : 
-          subpart
+          urlRegex.test(subpart) ?
+            <a key={`${index}-${subIndex}`} href={subpart} target="_blank" rel="noopener noreferrer">{subpart}</a> :
+            subpart
         ));
       }
       return part;
     });
   };
-  
+
 
   return (
     <Box sx={{ width: '100%', padding: '10px 0' }}>
@@ -77,7 +77,11 @@ const ChatMessage = ({ chatLog, chatbotImage, userImage }) => {
                 </>
               ) : (
                 <>
-                  {chat.content}
+                  <Typography
+                    variant="body2"
+                    sx={{ fontSize: 14, fontWeight: 'bold', whiteSpace: 'pre-line' }}
+                  > {chat.content}
+                  </Typography>
                   <img
                     src={userImage}
                     alt="User"
