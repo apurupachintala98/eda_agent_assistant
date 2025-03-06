@@ -47,6 +47,7 @@ function UserChat(props) {
   const [rawResponse, setRawResponse] = useState('');
   const [promptQuestion, setPromptQuestion] = useState('');
   const [outputExecQuery, setOutputExecQuery] = useState('');
+  const [inputEnabled, setInputEnabled] = useState(true);
 
   useLayoutEffect(() => {
     if (endOfMessagesRef.current) {
@@ -465,6 +466,8 @@ function UserChat(props) {
   }
 
   const apiCortexComplete = async (execData, promptQuestion, setChatLog) => {
+    setIsLoading(true);
+    setInputEnabled(false);
     const url = `${runCortex}`;
     const payload = {
       aplctn_cd: aplctn_cd,
@@ -473,31 +476,38 @@ function UserChat(props) {
       output_exec_query: execData,
       prompt: promptQuestion
     };
-    const response = await fetch(
-      url,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
+    try {
+      const response = await fetch(
+        url,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload)
+        }
+      );
+      if (response.ok) {
+        const responseData = await response.json();
+        const modelReply = responseData.modelreply.response;
+        const botMessage = {
+          role: 'assistant',
+          content: modelReply
+        };
+        setChatLog(prevChatLog => [...prevChatLog, botMessage]);
+      } else {
+        throw new Error('Failed to fetch data');
       }
-    );
-    if (response.ok) {
-      const responseData = await response.json();
-      const modelReply = responseData.modelreply.response;
-      const botMessage = {
-        role: 'assistant',
-        content: modelReply
-      };
-      setChatLog(prevChatLog => [...prevChatLog, botMessage]);
-    } else {
+    } catch (error) {
       console.error('Failed to complete API request:', error);
       const errorBotMessage = {
         role: 'assistant',
         content: 'An error occurred while processing your request.'
       };
       setChatLog(prevChatLog => [...prevChatLog, errorBotMessage]);
+    } finally {
+      setIsLoading(false); // End loading
+      setInputEnabled(true); // Enable input field
     }
   }
 
@@ -602,6 +612,7 @@ function UserChat(props) {
             <form onSubmit={handleSubmit} style={{ width: '100%', backgroundColor: '#fff', boxShadow: '0px -2px 5px rgba(0, 0, 0, 0.1)', ...customStyles.form }}>
               <TextField
                 fullWidth
+                disabled={!inputEnabled}
                 placeholder="What can I help you with..."
                 value={input}
                 onChange={(e) => {
