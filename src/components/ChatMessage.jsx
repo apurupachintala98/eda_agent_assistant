@@ -15,24 +15,24 @@ const ChatMessage = ({ chatLog, chatbotImage, userImage }) => {
     });
   }, [chatLog]);
 
-  const parseText = (text) => {
-    const urlRegex = /(\bhttps?:\/\/\S+\b)/g; // Regex to detect URLs
-    return text.split(/(\*\*.*?\*\*)/g).flatMap((part, index) => {
-      if (part.match(/^\*\*.*\*\*$/)) {
-        // Bold text marked by double asterisks
-        return [<b key={index}>{part.replace(/\*\*/g, '')}</b>];
-      }
-      if (urlRegex.test(part)) {
-        // Splitting and linking URLs
-        return part.split(urlRegex).map((subpart, subIndex) => (
-          urlRegex.test(subpart) ?
-            <a key={`${index}-${subIndex}`} href={subpart} target="_blank" rel="noopener noreferrer">{subpart}</a> :
-            subpart
-        ));
-      }
-      return part;
-    });
-  };
+  // const parseText = (text) => {
+  //   const urlRegex = /(\bhttps?:\/\/\S+\b)/g; // Regex to detect URLs
+  //   return text.split(/(\*\*.*?\*\*)/g).flatMap((part, index) => {
+  //     if (part.match(/^\*\*.*\*\*$/)) {
+  //       // Bold text marked by double asterisks
+  //       return [<b key={index}>{part.replace(/\*\*/g, '')}</b>];
+  //     }
+  //     if (urlRegex.test(part)) {
+  //       // Splitting and linking URLs
+  //       return part.split(urlRegex).map((subpart, subIndex) => (
+  //         urlRegex.test(subpart) ?
+  //           <a key={`${index}-${subIndex}`} href={subpart} target="_blank" rel="noopener noreferrer">{subpart}</a> :
+  //           subpart
+  //       ));
+  //     }
+  //     return part;
+  //   });
+  // };
 
 
   return (
@@ -73,7 +73,9 @@ const ChatMessage = ({ chatLog, chatbotImage, userImage }) => {
                   >
                     {chat.type === "sql" ? (
                       <pre><code className="sql">{chat.content}</code></pre>
-                    ) : parseText(chat.content)}
+                    ) : (
+                      chat.content
+                    )}
                   </Typography>
                 </>
               ) : (
