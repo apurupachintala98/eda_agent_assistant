@@ -574,7 +574,7 @@ function UserChat(props) {
             Execute SQL
           </Button>
         )}
-        {isLoading && <HashLoader color={themeColor} size={30} aria-label="Loading Spinner" data-testid="loader" />}
+        {isLoading && <HashLoader color={themeColor} size={30} aria-label="Loading Spinner" data-testid="loader" sx={{marginTop: "20px"}} />}
         {responseReceived &&
           <Feedback
             fdbk_id={resId}
