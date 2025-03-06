@@ -63,7 +63,7 @@ const Dashboard = ({
 
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ display: "flex", height: '100vh', flexDirection: 'column', overflow: 'hidden', ...customStyles.container }}>
+      <Box sx={{ display: "flex", height: "100vh", flexDirection: 'column', overflow: 'hidden', ...customStyles.container }}>
         <CssBaseline />
         <AppBar position="fixed" sx={{
           zIndex: (theme) => theme.zIndex.drawer + 1,
@@ -121,13 +121,13 @@ const Dashboard = ({
           flexGrow: 1,
           bgcolor: "#fff",
           p: 3,
-          height: "100vh",
+          display: "flex", height: "100vh",
           overflow: "hidden",
           paddingTop: '64px', ...customStyles.main
         }}>
           <Toolbar />
 
-          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", width: '100%' }}>
+          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", width: '100%'}}>
             <UserChat
               chatLog={chatLog}
               setChatLog={setChatLog}
