@@ -121,13 +121,13 @@ const Dashboard = ({
           flexGrow: 1,
           bgcolor: "#fff",
           p: 3,
-          display: "flex", height: "100vh",
+          height: "100vh",
           overflow: "hidden",
           paddingTop: '64px', ...customStyles.main
         }}>
           <Toolbar />
 
-          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", width: '100%'}}>
+          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", width: '100%' }}>
             <UserChat
               chatLog={chatLog}
               setChatLog={setChatLog}
