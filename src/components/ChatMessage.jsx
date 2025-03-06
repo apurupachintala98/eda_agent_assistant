@@ -56,6 +56,7 @@ const ChatMessage = ({ chatLog, chatbotImage, userImage }) => {
               width: 'fit-content',
               boxShadow: '0px 0px 7px #898080',
               color: '#1a3673',
+              overflow: 'auto', 
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
