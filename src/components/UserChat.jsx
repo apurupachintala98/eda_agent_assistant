@@ -18,7 +18,6 @@ function UserChat(props) {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const isMediumScreen = useMediaQuery(theme.breakpoints.between('sm', 'md'));
-
   const {
     chatLog, setChatLog,
     themeColor,
@@ -28,7 +27,7 @@ function UserChat(props) {
     isLoading, setIsLoading,
     successMessage, setSuccessMessage,
     showInitialView, setShowInitialView,
-    sessionId, setRequestId, apiPath, user_id, aplctn_cd, sqlUrl, feedback, runCortex, customStyles = {}, chatbotImage, userImage, handleNewChat, suggestedPrompts, showButton, setShowButton, showExecuteButton, setShowExecuteButton,showSummarizeButton, setShowSummarizeButton,
+    sessionId, setRequestId, apiPath, user_id, aplctn_cd, sqlUrl, feedback, runCortex, customStyles = {}, chatbotImage, userImage, handleNewChat, suggestedPrompts, showButton, setShowButton, showExecuteButton, setShowExecuteButton,showSummarizeButton, setShowSummarizeButton,  abortSignal,
   } = props;
 
   const endOfMessagesRef = useRef(null);
@@ -111,12 +110,14 @@ function UserChat(props) {
   }, []);
 
 
+
   const handleMessageSubmit = async (messageContent, fromPrompt = false) => {
     if (!messageContent.trim()) return;
     if (!aplctn_cd.trim() || !sessionId.trim()) {
       setError('Please provide valid app_cd and request_id.');
       return;
     }
+   
     const newMessage = {
       role: 'user',
       content: messageContent,
@@ -153,7 +154,8 @@ function UserChat(props) {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
+          signal: abortSignal
         }
       );
       if (!response.ok) {

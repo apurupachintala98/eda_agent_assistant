@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { AppBar, Toolbar, CssBaseline, Typography, Drawer, Box, Button as MuiButton, useMediaQuery } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import UserChat from './UserChat';
@@ -39,9 +39,11 @@ const Dashboard = ({
   const [showExecuteButton, setShowExecuteButton] = useState(false);
   const [showButton, setShowButton] = useState(false); // New state to show/hide the button
   const [showSummarizeButton, setShowSummarizeButton] = useState(false);
-
+  const abortController = useRef(new AbortController());
 
   const handleNewChat = () => {
+    abortController.current.abort(); // Abort any ongoing request
+    abortController.current = new AbortController(); // Create a new instance for new requests
     setChatLog([]);
     setResponseReceived(false);
     setError('');
@@ -164,6 +166,7 @@ const Dashboard = ({
               runCortex={runCortex}
               showSummarizeButton={showSummarizeButton}
                setShowSummarizeButton={setShowSummarizeButton}
+               abortSignal={abortController.current.signal}
             />
           </Box>
         </Box>
