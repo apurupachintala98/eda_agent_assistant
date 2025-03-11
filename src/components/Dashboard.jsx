@@ -49,7 +49,6 @@ const Dashboard = ({
     setSuccessMessage('');
     setShowInitialView(true);
     setRequestId(uuidv4());
-    setInput('');
     onNewChat?.(uuidv4());
     setShowExecuteButton(false);
     setShowButton(false);
