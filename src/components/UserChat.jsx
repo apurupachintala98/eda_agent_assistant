@@ -585,17 +585,17 @@ function UserChat(props) {
         <ChatMessage chatLog={chatLog} chatbotImage={chatbotImage} userImage={userImage} />
         <div ref={endOfMessagesRef} />
         {showExecuteButton && (
-          <Button variant="contained" color="primary" onClick={handleButtonClick}>
+          <Button variant="contained" color="primary" onClick={handleButtonClick} sx={{marginBottom: "20px"}}>
             Execute SQL
           </Button>
         )}
 
         {showSummarizeButton && (
-          <Button variant="contained" color="primary" onClick={handleSummarizeButtonClick}>
+          <Button variant="contained" color="primary" onClick={handleSummarizeButtonClick} sx={{marginBottom: "20px"}}>
             Summarize
           </Button>
         )}
-        {isLoading && <HashLoader color={themeColor} size={30} aria-label="Loading Spinner" data-testid="loader" sx={{ marginTop: "20px" }} />}
+        {isLoading && <HashLoader color={themeColor} size={30} aria-label="Loading Spinner" data-testid="loader" />}
         {responseReceived &&
           <Feedback
             fdbk_id={resId}
