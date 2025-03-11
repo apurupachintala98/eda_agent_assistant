@@ -162,6 +162,8 @@ const Dashboard = ({
               showButton={showButton}
               setShowButton={setShowButton}
               runCortex={runCortex}
+              showSummarizeButton={showSummarizeButton}
+               setShowSummarizeButton={setShowSummarizeButton}
             />
           </Box>
         </Box>
