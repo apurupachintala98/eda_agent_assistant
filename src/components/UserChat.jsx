@@ -595,7 +595,7 @@ function UserChat(props) {
             Summarize
           </Button>
         )}
-        {isLoading && <HashLoader color={themeColor} size={30} aria-label="Loading Spinner" data-testid="loader" sx={{marginTop: "20px"}} />}
+        {isLoading && <HashLoader color={themeColor} size={30} aria-label="Loading Spinner" data-testid="loader" sx={{ marginTop: "20px" }} />}
         {responseReceived &&
           <Feedback
             fdbk_id={resId}
