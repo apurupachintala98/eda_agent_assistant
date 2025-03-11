@@ -48,6 +48,7 @@ function UserChat(props) {
   const [promptQuestion, setPromptQuestion] = useState('');
   const [outputExecQuery, setOutputExecQuery] = useState('');
   const [inputEnabled, setInputEnabled] = useState(true);
+  const [showSummarizeButton, setShowSummarizeButton] = useState(false);
 
   useLayoutEffect(() => {
     if (endOfMessagesRef.current) {
@@ -444,8 +445,9 @@ function UserChat(props) {
         content: modelReply,
       };
       setChatLog((prevChatLog) => [...prevChatLog, botMessage]); // Update chat log with assistant's message
-      await apiCortexComplete(data, promptQuestion, setChatLog);
-
+      // await apiCortexComplete(data, promptQuestion, setChatLog);
+      setShowExecuteButton(false);
+      setShowSummarizeButton(true);
     } catch (err) {
       // Handle network errors or other unexpected issues
       const fallbackErrorMessage = 'Error communicating with backend.';
@@ -464,6 +466,19 @@ function UserChat(props) {
       setShowExecuteButton(false);
     }
   }
+
+  const handleSummarizeButtonClick = async () => {
+    try {
+      if (!outputExecQuery) {
+        console.error('No execution data available for summarization');
+        return;  // Optionally handle this case in your UI
+      }
+      await apiCortexComplete(outputExecQuery.modelreply.response, promptQuestion, setChatLog);
+      setShowSummarizeButton(false); // Hide summarize button after showing response
+    } catch (error) {
+      console.error('API Call Error in Summarize:', error);
+    }
+  };
 
   const apiCortexComplete = async (execData, promptQuestion, setChatLog) => {
     setIsLoading(true);
@@ -572,6 +587,12 @@ function UserChat(props) {
         {showExecuteButton && (
           <Button variant="contained" color="primary" onClick={handleButtonClick}>
             Execute SQL
+          </Button>
+        )}
+
+        {showSummarizeButton && (
+          <Button variant="contained" color="primary" onClick={handleSummarizeButtonClick}>
+            Summarize
           </Button>
         )}
         {isLoading && <HashLoader color={themeColor} size={30} aria-label="Loading Spinner" data-testid="loader" sx={{marginTop: "20px"}} />}
