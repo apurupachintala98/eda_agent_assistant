@@ -41,6 +41,7 @@ const Dashboard = ({
   const [showSummarizeButton, setShowSummarizeButton] = useState(false);
 
   const handleNewChat = () => {
+    window.location.reload();
     setChatLog([]);
     setResponseReceived(false);
     setError('');
