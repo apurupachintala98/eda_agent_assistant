@@ -100,6 +100,8 @@ function UserChat(props) {
   const handleInputFocusOrChange = () => {
     setShowInitialView(false);
     resetInactivityTimeout();
+    setShowExecuteButton(false);
+    setShowSummarizeButton(false);
   };
 
   useEffect(() => {
@@ -585,13 +587,13 @@ function UserChat(props) {
         <ChatMessage chatLog={chatLog} chatbotImage={chatbotImage} userImage={userImage} />
         <div ref={endOfMessagesRef} />
         {showExecuteButton && (
-          <Button variant="contained" color="primary" onClick={handleButtonClick} sx={{marginBottom: "20px"}}>
+          <Button variant="contained" color="primary" onClick={handleButtonClick} sx={{ marginBottom: "20px" }}>
             Execute SQL
           </Button>
         )}
 
         {showSummarizeButton && (
-          <Button variant="contained" color="primary" onClick={handleSummarizeButtonClick} sx={{marginBottom: "20px"}}>
+          <Button variant="contained" color="primary" onClick={handleSummarizeButtonClick} sx={{ marginBottom: "20px" }}>
             Summarize
           </Button>
         )}
