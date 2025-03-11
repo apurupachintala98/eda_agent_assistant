@@ -38,6 +38,7 @@ const Dashboard = ({
   const [sessionId, setRequestId] = useState(uuidv4());
   const [showExecuteButton, setShowExecuteButton] = useState(false);
   const [showButton, setShowButton] = useState(false); // New state to show/hide the button
+  const [showSummarizeButton, setShowSummarizeButton] = useState(false);
 
 
   const handleNewChat = () => {
@@ -48,9 +49,11 @@ const Dashboard = ({
     setSuccessMessage('');
     setShowInitialView(true);
     setRequestId(uuidv4());
+    setInput('');
     onNewChat?.(uuidv4());
     setShowExecuteButton(false);
     setShowButton(false);
+    setShowSummarizeButton(false);
   };
 
   const theme = createTheme({

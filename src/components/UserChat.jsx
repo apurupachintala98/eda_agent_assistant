@@ -28,7 +28,7 @@ function UserChat(props) {
     isLoading, setIsLoading,
     successMessage, setSuccessMessage,
     showInitialView, setShowInitialView,
-    sessionId, setRequestId, apiPath, user_id, aplctn_cd, sqlUrl, feedback, runCortex, customStyles = {}, chatbotImage, userImage, handleNewChat, suggestedPrompts, showButton, setShowButton, showExecuteButton, setShowExecuteButton,
+    sessionId, setRequestId, apiPath, user_id, aplctn_cd, sqlUrl, feedback, runCortex, customStyles = {}, chatbotImage, userImage, handleNewChat, suggestedPrompts, showButton, setShowButton, showExecuteButton, setShowExecuteButton,showSummarizeButton, setShowSummarizeButton,
   } = props;
 
   const endOfMessagesRef = useRef(null);
@@ -48,7 +48,6 @@ function UserChat(props) {
   const [promptQuestion, setPromptQuestion] = useState('');
   const [outputExecQuery, setOutputExecQuery] = useState('');
   const [inputEnabled, setInputEnabled] = useState(true);
-  const [showSummarizeButton, setShowSummarizeButton] = useState(false);
 
   useLayoutEffect(() => {
     if (endOfMessagesRef.current) {
