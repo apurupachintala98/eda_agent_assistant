@@ -133,7 +133,7 @@ function UserChat(props) {
 
     setChatLog(newChatLog);
     setInput(''); // Clear the input field
-    setResponseReceived(false)// Set loading state to true
+    // setResponseReceived(false)// Set loading state to true
     setIsLoading(true); // Set loading state
     setError(''); // Clear any previous error
     setShowInitialView(false);
@@ -306,7 +306,7 @@ function UserChat(props) {
       console.error('Error:', err);
     } finally {
       setIsLoading(false); // Set loading state to false
-      setResponseReceived(true);// Set loading state to false
+      // setResponseReceived(true);// Set loading state to false
     }
   };
 
