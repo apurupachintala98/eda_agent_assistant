@@ -27,7 +27,7 @@ function UserChat(props) {
     isLoading, setIsLoading,
     successMessage, setSuccessMessage,
     showInitialView, setShowInitialView,
-    sessionId, setRequestId, apiPath, user_id, aplctn_cd, sqlUrl, feedback, runCortex, customStyles = {}, chatbotImage, userImage, handleNewChat, suggestedPrompts, showButton, setShowButton, showExecuteButton, setShowExecuteButton,showSummarizeButton, setShowSummarizeButton,  abortSignal,
+    sessionId, setRequestId, apiPath, user_id, aplctn_cd, sqlUrl, feedback, runCortex, customStyles = {}, chatbotImage, userImage, handleNewChat, suggestedPrompts, showButton, setShowButton, showExecuteButton, setShowExecuteButton,showSummarizeButton, setShowSummarizeButton,
   } = props;
 
   const endOfMessagesRef = useRef(null);
@@ -155,7 +155,6 @@ function UserChat(props) {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(payload),
-          signal: abortSignal
         }
       );
       if (!response.ok) {
