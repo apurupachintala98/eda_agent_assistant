@@ -482,51 +482,165 @@ function UserChat(props) {
     }
   };
 
+  // const apiCortexComplete = async (execData, promptQuestion, setChatLog) => {
+  //   setIsLoading(true);
+  //   setInputEnabled(false);
+  //   const url = `${runCortex}`;
+  //   const payload = {
+  //     aplctn_cd: aplctn_cd,
+  //     session_id: sessionId,
+  //     user_id: user_id,
+  //     output_exec_query: execData,
+  //     prompt: promptQuestion
+  //   };
+  //   try {
+  //     const response = await fetch(
+  //       url,
+  //       {
+  //         method: 'POST',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //         body: JSON.stringify(payload)
+  //       }
+  //     );
+  //     if (response.ok) {
+  //       const responseData = await response.json();
+  //       const modelReply = responseData.modelreply.response;
+  //       const botMessage = {
+  //         role: 'assistant',
+  //         content: modelReply
+  //       };
+  //       setChatLog(prevChatLog => [...prevChatLog, botMessage]);
+  //     } else {
+  //       throw new Error('Failed to fetch data');
+  //     }
+  //   } catch (error) {
+  //     console.error('Failed to complete API request:', error);
+  //     const errorBotMessage = {
+  //       role: 'assistant',
+  //       content: 'An error occurred while processing your request.'
+  //     };
+  //     setChatLog(prevChatLog => [...prevChatLog, errorBotMessage]);
+  //   } finally {
+  //     setIsLoading(false); // End loading
+  //     setInputEnabled(true); // Enable input field
+  //   }
+  // }
+
   const apiCortexComplete = async (execData, promptQuestion, setChatLog) => {
     setIsLoading(true);
     setInputEnabled(false);
-    const url = `${runCortex}`;
+
+    // const url = `${runCortex}`;
+    // const payload = {
+    //     aplctn_cd: aplctn_cd,
+    //     session_id: sessionId,
+    //     user_id: user_id,
+    //     output_exec_query: execData,
+    //     prompt: promptQuestion
+    // };
+
     const payload = {
-      aplctn_cd: aplctn_cd,
-      session_id: sessionId,
-      user_id: user_id,
+      query: {
       output_exec_query: execData,
-      prompt: promptQuestion
-    };
-    try {
-      const response = await fetch(
-        url,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload)
-        }
-      );
-      if (response.ok) {
-        const responseData = await response.json();
-        const modelReply = responseData.modelreply.response;
-        const botMessage = {
-          role: 'assistant',
-          content: modelReply
-        };
-        setChatLog(prevChatLog => [...prevChatLog, botMessage]);
-      } else {
-        throw new Error('Failed to fetch data');
-      }
-    } catch (error) {
-      console.error('Failed to complete API request:', error);
-      const errorBotMessage = {
-        role: 'assistant',
-        content: 'An error occurred while processing your request.'
-      };
-      setChatLog(prevChatLog => [...prevChatLog, errorBotMessage]);
-    } finally {
-      setIsLoading(false); // End loading
-      setInputEnabled(true); // Enable input field
-    }
+      aplctn_cd: "aedl",
+      app_id: "aedl",
+      api_key: "78a799ea-a0f6-11ef-a0ce-15a449f7a8b0",
+      method: "cortex",
+      model: "llama3.1-70b-elevance",
+      sys_msg: "You are powerful AI assistant in providing accurate answers always. Be Concise in providing answers based on context.",
+      limit_convs: "0",
+      prompt: {
+          messages: [
+              {
+                  role: "user",
+                  content: promptQuestion
+              }
+          ]
+      },
+      app_lvl_prefix: "",
+      user_id: user_id,
+      session_id: "ad339c7f-feeb-49a3-a5b5-009152b47006"
   }
+  };
+
+    try {
+      const response = await fetch("http://10.126.192.122:8340/api/cortex/complete", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    });
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        let fullText = '';
+        let typingQueue = '';
+        let isTyping = false;
+        let isStreamEnded = false;
+
+        // Add initial assistant message so we can stream characters into it
+        setChatLog(prev => [...prev, { role: 'assistant', content: '' }]);
+
+        const typeEffect = () => {
+            if (typingQueue.length === 0) {
+                isTyping = false;
+                return;
+            }
+
+            const nextChar = typingQueue.charAt(0);
+            typingQueue = typingQueue.slice(1);
+
+            setChatLog(prev => {
+                const last = prev[prev.length - 1];
+                if (last && last.role === 'assistant') {
+                    return [
+                        ...prev.slice(0, -1),
+                        { ...last, content: last.content + nextChar }
+                    ];
+                }
+                return prev;
+            });
+
+            setTimeout(typeEffect, 30); // typing speed
+        };
+
+        while (!isStreamEnded) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            let chunk = decoder.decode(value, { stream: true });
+
+            const eosIndex = chunk.indexOf('end_of_stream');
+            if (eosIndex !== -1) {
+                chunk = chunk.slice(0, eosIndex);
+                isStreamEnded = true;
+            }
+
+            fullText += chunk;
+            typingQueue += chunk;
+
+            if (!isTyping && typingQueue.length > 0) {
+                isTyping = true;
+                typeEffect();
+            }
+        }
+    } catch (error) {
+        console.error('Failed to complete API request:', error);
+        const errorBotMessage = {
+            role: 'assistant',
+            content: 'An error occurred while processing your request.'
+        };
+        setChatLog(prev => [...prev, errorBotMessage]);
+    } finally {
+        setIsLoading(false);
+        setInputEnabled(true);
+    }
+};
+
 
   return (
     <Box sx={{
